@@ -7,6 +7,35 @@ def tick(price, tick_size=0.05):
     """
     return round(price / tick_size)*tick_size
 
+def stop_loss(price, stop_loss, order='B', tick_size=0.05):
+    """
+    Return the stop loss for the order
+    price
+        price from which stop loss is to be calculated
+    stop_loss
+        stop loss percentage from price
+    order
+        the original order type - B for Buy and S for Sell
+        If the original order is buy, then a sell stop
+        loss is generated and vice-versa
+    tick_size
+        tick_size to be rounded off
+    >>> stop_loss(100, 3)
+    >>> 97
+
+    Notes
+    ------
+    * passing a negative value may throw unexpected results
+    * raises ValueError if order is other than B or S
+
+    """
+    if order == 'B':
+        return tick(price * (1 - stop_loss * 0.01), tick_size)
+    elif order == 'S':
+        return tick(price * (1 + stop_loss * 0.01), tick_size)
+    else:
+        raise ValueError('order should be either B or S')
+
 def create_orders(data, rename, **kwargs):
     """
     create an orders dataframe from an existing dataframe
