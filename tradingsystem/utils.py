@@ -59,7 +59,7 @@ def fetch_preopen_data(url=None):
     """
     import requests
     if url is None:
-        url = "https://www1.nseindia.com/live_market/dynaContent/live_analysis/pre_open/nifty.json"
+        url = "https://www1.nseindia.com/live_market/dynaContent/live_analysis/pre_open/all.json"
     req = requests.get(url)     
     dct = req.json()    
     agg = []
