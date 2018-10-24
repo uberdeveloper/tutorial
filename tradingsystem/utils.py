@@ -72,3 +72,29 @@ def fetch_preopen_data(url=None):
     df["iep"] = df.iep.astype("f8")
     df.columns = ['SYMBOL', 'PctChange', 'OpenPrice']
     return df
+
+def get_bhav_copy(date):
+    """
+    Get bhav copy for NSE for a given date and 
+    convert it into a dataframe
+    TO DO: Add BadFile Exception
+    """
+    from zipfile import ZipFile
+    from io import BytesIO
+
+    d = pd.to_datetime(date)
+    print(d)
+    year = d.strftime('%Y')
+    month = d.strftime('%b').upper()
+    base_url = f'https://www.nseindia.com/content/historical/EQUITIES/{year}/{month}/cm'
+    headers = {'Referer': 'https://www.nseindia.com/products/content/all_daily_reports.htm'}
+    bhavfile = base_url + d.strftime('%d%b%Y').upper() + 'bhav.csv.zip'
+    print(bhavfile)
+    # Uncomment the below for custom date
+    # bhavfile = 'customURL'
+    req = requests.get(bhavfile, headers=headers)
+    z = ZipFile(BytesIO(req.content))
+    fn = z.namelist()[0]
+    with z.open(fn) as f:
+        db = pd.read_csv(f, index_col=0, parse_dates=True, usecols=range(12))
+    return db.query('SERIES == "EQ"').reset_index()
