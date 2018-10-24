@@ -96,5 +96,5 @@ def get_bhav_copy(date):
     z = ZipFile(BytesIO(req.content))
     fn = z.namelist()[0]
     with z.open(fn) as f:
-        db = pd.read_csv(f, index_col=0, parse_dates=True, usecols=range(12))
+        db = pd.read_csv(f, index_col=0, parse_dates=['TIMESTAMP'], usecols=range(12))
     return db.query('SERIES == "EQ"').reset_index()
