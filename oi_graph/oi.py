@@ -81,9 +81,9 @@ def update():
 	expiry=expiry_select.value)
 	x_range = [(str(int(a)), str(b)) for a,b in 
 		zip(data.strike_pr, data.option_typ)]
+	p1.x_range.factors = x_range
 	src = ColumnDataSource({'x': x_range, 'values': data.open_int.values})
 	source.data = src.data
-	#p1.x_range = FactorRange(*x)
 
 
 
@@ -99,7 +99,7 @@ q = query(df, symbol=select_symbols.value, date=date_picker.value,
 	expiry=expiry_select.value)
 q = query(df, symbol='BANKBARODA')
 x = [(str(int(a)), str(b)) for a,b in zip(q.strike_pr, q.option_typ)]
-source = ColumnDataSource({'x': x, 'values': q.open_int.values})
+source = ColumnDataSource(data=dict(x=x, values=q.open_int.values))
 TOOLTIPS = [
 	('index', '$index'),
 	('open_interest', '@values'),
@@ -109,8 +109,8 @@ p1 = figure(x_range=FactorRange(),
 	title="Open Interest", tooltips=TOOLTIPS,
 	tools="pan,wheel_zoom,box_zoom,hover,reset")
 p1.x_range = FactorRange(*x)
-
 bar = p1.vbar(x='x', top='values', width=0.9, source=source,
+	alpha=0.7,
 	fill_color=factor_cmap('x', palette=['red', 'green'],
 		factors=['PE', 'CE'], start=1, end=2))
 
