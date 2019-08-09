@@ -47,8 +47,13 @@ select_symbol = Select(options=symbols, title='Select a symbol',
 button = Button(label='Refresh', button_type="success")
 
 # Create plots
-p = figure(title='Open interest chart for NIFTY futures')
+p = figure(title='Open interest chart for NIFTY futures',
+    tooltips=[
+        ('date', '@date'),
+        ('value', '$y{0 a}')
+    ])
 cols, data = get_open_interest(df, 'NIFTY')
+data['date'] = data.timestamp.dt.date.astype(str)
 colors = Spectral6[:len(cols)]
 source.data = source.from_df(data)
 print(cols, colors)
@@ -58,6 +63,7 @@ p.vbar_stack(cols, width=0.6, x='index', color=colors, source=source)
 def update():
     symbol = select_symbol.value
     cols, data = get_open_interest(df, symbol)
+    data['date'] = data.timestamp.dt.date.astype(str)
     source.data = source.from_df(data)
     max_val = data.sum(axis=1).max()
     print(cols, symbol, max_val)
