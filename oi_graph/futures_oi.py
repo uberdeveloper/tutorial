@@ -36,6 +36,22 @@ def get_open_interest(data, symbol):
     pct_pivot = pivot.pct_change()*100
     return (list(pivot.columns), pivot.reset_index())
 
+def get_price_oi(data, symbol):
+    """
+    Get the price and combined open_interest for the symbol
+    data
+        dataframe with all data
+    symbol 
+        symbol to extract data
+    """
+    temp = data[data.symbol == symbol]
+    grouped = temp.groupby('timestamp')
+    agg = grouped.agg({'open_int': sum, 'close': 'mean'}).reset_index()
+    agg['date'] = agg.timestamp.dt.date.astype(str)
+    agg['index'] = range(len(agg))
+    return agg
+
+
 output_file('futures_oi.html')
 df = load_data()
 symbols = list(df.symbol.unique())
