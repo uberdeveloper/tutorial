@@ -51,6 +51,35 @@ def get_price_oi(data, symbol):
     agg['index'] = range(len(agg))
     return agg
 
+def twin_plot(data, y_axis, x_axis='timestamp'):
+    """
+    Create a bokeh plot with twin axes
+    """
+    from bokeh.plotting import figure
+    from bokeh.models import LinearAxis, Range1d
+
+    TOOLTIPS = [
+    ('datetime', '@x{%F %H:%M}'),
+    ('value', '$y{0.00}')
+    ]
+
+    y1,y2 = y_axis[0], y_axis[1]
+    h0 = data[y1].max()
+    l0 = data[y1].min()
+    h1 = data[y2].max()
+    l1 = data[y2].min()
+    p = figure(x_axis_type='datetime', y_range=(l0, h0),
+        tooltips=TOOLTIPS, height=240, width=600)
+    p.line(data[x_axis].values, data[y1].values, 
+        color="red", legend=y1)
+    p.extra_y_ranges = {"foo": Range1d(l1,h1)}
+    p.line(data[x_axis], data[y2].values, color="blue", 
+        y_range_name="foo", legend=y2)
+    p.add_layout(LinearAxis(y_range_name="foo", axis_label=y2), 'left')
+    p.hover.formatters= {'x': 'datetime'}
+    p.legend.location = 'top_center'
+    p.legend.click_policy = 'hide'
+    return p
 
 output_file('futures_oi.html')
 df = load_data()
