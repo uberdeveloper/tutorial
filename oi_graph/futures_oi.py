@@ -4,7 +4,7 @@ import numpy as np
 from bokeh.io import curdoc
 from bokeh.layouts import row, column, gridplot, layout
 from bokeh.palettes import Spectral6
-from bokeh.models import ColumnDataSource, Range1d
+from bokeh.models import ColumnDataSource, Range1d, LinearAxis
 from bokeh.models.widgets import Select, Button
 from bokeh.plotting import figure, output_file, show
 
@@ -55,8 +55,6 @@ def twin_plot(data, y_axis, x_axis='timestamp'):
     """
     Create a bokeh plot with twin axes
     """
-    from bokeh.plotting import figure
-    from bokeh.models import LinearAxis, Range1d
 
     TOOLTIPS = [
     ('datetime', '@x{%F %H:%M}'),
@@ -96,13 +94,16 @@ p = figure(title='Open interest chart for NIFTY futures',
     tooltips=[
         ('date', '@date'),
         ('value', '$y{0 a}')
-    ])
+    ],
+    height=250)
 cols, data = get_open_interest(df, 'NIFTY')
 data['date'] = data.timestamp.dt.date.astype(str)
 colors = Spectral6[:len(cols)]
 source.data = source.from_df(data)
 print(cols, colors)
 p.vbar_stack(cols, width=0.6, x='index', color=colors, source=source)
+price_data = get_price_oi(df, 'NIFTY')
+price_chart = twin_plot(price_data, y_axis=['close', 'open_int'])
 
 # setup callbacks
 def update():
@@ -114,6 +115,8 @@ def update():
     print(cols, symbol, max_val)
     p.y_range = Range1d(100, max_val)
     p.title.text = 'Open interest chart for {} futures'.format(symbol)
+    pdata = get_price_data(df, symbol)
+    price_chart = twin_plot(pdata, y_axis=['close', 'open_int'])
 
 
 # set up event triggers
@@ -124,6 +127,7 @@ button.on_click(update)
 l = layout(
     column(
         row(select_symbol,button),
+        price_chart,
         p)
     )
 
