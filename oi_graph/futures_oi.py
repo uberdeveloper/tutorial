@@ -33,8 +33,9 @@ def get_open_interest(data, symbol):
     pivot = temp.pivot(index='timestamp', columns='expiry_dt', values='open_int')
     pivot.rename(lambda x: x.strftime('%Y-%m-%d'),
                 axis='columns', inplace=True)
-    pct_pivot = pivot.pct_change()*100
-    return (list(pivot.columns), pivot.reset_index())
+    columns = pivot.columns
+    pivot['combined_oi'] = pivot.sum(axis=1)
+    return (columns, pivot.reset_index())
 
 def get_price_oi(data, symbol):
     """
@@ -93,7 +94,8 @@ button = Button(label='Refresh', button_type="success")
 p = figure(title='Open interest chart for NIFTY futures',
     tooltips=[
         ('date', '@date'),
-        ('value', '$y{0 a}')
+        ('combined OI', '@combined_oi{0 a}'),
+        ('expiry_at', '$name q:@$name{0.0 a}')
     ],
     height=250)
 cols, data = get_open_interest(df, 'NIFTY')
