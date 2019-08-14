@@ -52,38 +52,11 @@ def get_price_oi(data, symbol):
     agg['index'] = range(len(agg))
     return agg
 
-def twin_plot(data, y_axis, x_axis='timestamp'):
-    """
-    Create a bokeh plot with twin axes
-    """
-
-    TOOLTIPS = [
-    ('datetime', '@x{%F %H:%M}'),
-    ('value', '$y{0.00}')
-    ]
-
-    y1,y2 = y_axis[0], y_axis[1]
-    h0 = data[y1].max()
-    l0 = data[y1].min()
-    h1 = data[y2].max()
-    l1 = data[y2].min()
-    p = figure(x_axis_type='datetime', y_range=(l0, h0),
-        tooltips=TOOLTIPS, height=240, width=600)
-    p.line(data[x_axis].values, data[y1].values, 
-        color="red", legend=y1)
-    p.extra_y_ranges = {"foo": Range1d(l1,h1)}
-    p.line(data[x_axis], data[y2].values, color="blue", 
-        y_range_name="foo", legend=y2)
-    p.add_layout(LinearAxis(y_range_name="foo", axis_label=y2), 'left')
-    p.hover.formatters= {'x': 'datetime'}
-    p.legend.location = 'top_center'
-    p.legend.click_policy = 'hide'
-    return p
-
 output_file('futures_oi.html')
 df = load_data()
 symbols = list(df.symbol.unique())
 source = ColumnDataSource()
+prices = ColumnDataSource()
 
 # Create widgets
 select_symbol = Select(options=symbols, title='Select a symbol',
@@ -102,23 +75,44 @@ cols, data = get_open_interest(df, 'NIFTY')
 data['date'] = data.timestamp.dt.date.astype(str)
 colors = Spectral6[:len(cols)]
 source.data = source.from_df(data)
-print(cols, colors)
 p.vbar_stack(cols, width=0.6, x='index', color=colors, source=source)
+
 price_data = get_price_oi(df, 'NIFTY')
-price_chart = twin_plot(price_data, y_axis=['close', 'open_int'])
+prices.data = prices.from_df(price_data)
+h0 = price_data['close'].max()
+l0 = price_data['close'].min()
+h1 = price_data['open_int'].max()
+l1 = price_data['open_int'].min()
+p2 = figure(title='Price vs Open Interest', 
+    x_axis_type='datetime', y_range=(l0,h0),
+    height=250)
+p2.line('timestamp', 'close', source=prices)
+p2.extra_y_ranges = {'foo': Range1d(l1,h1)}
+p2.line('timestamp', 'open_int', source=prices, y_range_name='foo')
+p2.add_layout(LinearAxis(y_range_name='foo'), 'right')
 
 # setup callbacks
 def update():
     symbol = select_symbol.value
     cols, data = get_open_interest(df, symbol)
     data['date'] = data.timestamp.dt.date.astype(str)
-    source.data = source.from_df(data)
-    max_val = data.sum(axis=1).max()
-    print(cols, symbol, max_val)
-    p.y_range = Range1d(100, max_val)
+    max_val = data[cols].sum().max()
+    p.y_range.start = 0
+    p.y_range.end = max_val
     p.title.text = 'Open interest chart for {} futures'.format(symbol)
-    pdata = get_price_data(df, symbol)
-    price_chart = twin_plot(pdata, y_axis=['close', 'open_int'])
+    source.data = source.from_df(data)
+    pdata = get_price_oi(df, symbol)
+    h0 = pdata['close'].max()
+    l0 = pdata['close'].min()
+    h1 = pdata['open_int'].max()
+    l1 = pdata['open_int'].min()
+    print(symbol, l0, h0, l1, h1)
+    prices.data = prices.from_df(pdata)
+    p2.y_range.start = l0
+    p2.y_range.end = h0
+    p2.extra_y_ranges['foo'].start = l1
+    p2.extra_y_ranges['foo'].end = h1
+    
 
 
 # set up event triggers
@@ -129,8 +123,9 @@ button.on_click(update)
 l = layout(
     column(
         row(select_symbol,button),
-        price_chart,
-        p)
+        p2,
+        p
+        )
     )
 
 curdoc().add_root(l)
