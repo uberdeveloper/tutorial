@@ -57,6 +57,8 @@ df = load_data()
 symbols = list(df.symbol.unique())
 source = ColumnDataSource()
 prices = ColumnDataSource()
+pct_chg = ColumnDataSource()
+
 
 # Create widgets
 select_symbol = Select(options=symbols, title='Select a symbol',
@@ -91,6 +93,17 @@ p2.extra_y_ranges = {'foo': Range1d(l1,h1)}
 p2.line('timestamp', 'open_int', source=prices, y_range_name='foo')
 p2.add_layout(LinearAxis(y_range_name='foo'), 'right')
 
+pct_change = data[['date', 'combined_oi']]
+pct_change['date'] = pd.to_datetime(pct_change['date'])
+pct_change['chg'] = pct_change.combined_oi.pct_change()
+print(pct_change.reset_index().info())
+pct_chg.data = pct_chg.from_df(pct_change)
+p3 = figure(title='Change in open_interest',
+    height=250, x_axis_type='datetime')
+p3.vbar(x='index', top='chg', width=0.6, source=pct_chg)
+
+
+
 # setup callbacks
 def update():
     symbol = select_symbol.value
@@ -124,7 +137,8 @@ l = layout(
     column(
         row(select_symbol,button),
         p2,
-        p
+        p,
+        p3
         )
     )
 
