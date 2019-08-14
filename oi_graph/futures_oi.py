@@ -71,8 +71,7 @@ p = figure(title='Open interest chart for NIFTY futures',
         ('date', '@date'),
         ('combined OI', '@combined_oi{0 a}'),
         ('expiry_at', '$name q:@$name{0.0 a}')
-    ],
-    height=250)
+    ])
 cols, data = get_open_interest(df, 'NIFTY')
 data['date'] = data.timestamp.dt.date.astype(str)
 colors = Spectral6[:len(cols)]
@@ -86,22 +85,18 @@ l0 = price_data['close'].min()
 h1 = price_data['open_int'].max()
 l1 = price_data['open_int'].min()
 p2 = figure(title='Price vs Open Interest', 
-    x_axis_type='datetime', y_range=(l0,h0),
-    height=250)
+    x_axis_type='datetime', y_range=(l0,h0))
 p2.line('timestamp', 'close', source=prices)
 p2.extra_y_ranges = {'foo': Range1d(l1,h1)}
 p2.line('timestamp', 'open_int', source=prices, y_range_name='foo')
 p2.add_layout(LinearAxis(y_range_name='foo'), 'right')
 
-pct_change = data[['date', 'combined_oi']]
+pct_change = data[['date', 'combined_oi']].copy()
 pct_change['date'] = pd.to_datetime(pct_change['date'])
 pct_change['chg'] = pct_change.combined_oi.pct_change()
-print(pct_change.reset_index().info())
 pct_chg.data = pct_chg.from_df(pct_change)
-p3 = figure(title='Change in open_interest',
-    height=250, x_axis_type='datetime')
+p3 = figure(title='Change in open_interest')
 p3.vbar(x='index', top='chg', width=0.6, source=pct_chg)
-
 
 
 # setup callbacks
@@ -109,6 +104,7 @@ def update():
     symbol = select_symbol.value
     cols, data = get_open_interest(df, symbol)
     data['date'] = data.timestamp.dt.date.astype(str)
+    print(data[cols].sum())
     max_val = data[cols].sum().max()
     p.y_range.start = 0
     p.y_range.end = max_val
@@ -125,21 +121,19 @@ def update():
     p2.y_range.end = h0
     p2.extra_y_ranges['foo'].start = l1
     p2.extra_y_ranges['foo'].end = h1
-    
+    pct_change = data[['date', 'combined_oi']].copy()
+    pct_change['chg'] = pct_change.combined_oi.pct_change()
+    pct_chg.data = pct_chg.from_df(pct_change)  
 
 
 # set up event triggers
 button.on_click(update)
 
-
+grid = gridplot([p2,p,p3], ncols=1, plot_width=640, plot_height=180)
 # Display the dashboard
 l = layout(
-    column(
         row(select_symbol,button),
-        p2,
-        p,
-        p3
-        )
+        grid
     )
 
 curdoc().add_root(l)
