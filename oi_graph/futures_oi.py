@@ -108,7 +108,7 @@ pct_chg.data = pct_chg.from_df(pct_change)
 p3 = figure(title='Change in open_interest',
     tooltips=[
         ('change', '$y{0.00%}')
-    ],
+    ], x_range = p.x_range,
     background_fill_color='beige', background_fill_alpha=0.4)
 p3.vbar(x='index', top='chg', width=0.6, 
     fill_alpha=0.7, color='gold', source=pct_chg)
@@ -119,7 +119,6 @@ def update():
     symbol = select_symbol.value
     cols, data = get_open_interest(df, symbol)
     data['date'] = data.timestamp.dt.date.astype(str)
-    print(data[cols].sum())
     max_val = data[cols].sum().max()
     p.y_range.start = 0
     p.y_range.end = max_val
