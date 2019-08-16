@@ -4,7 +4,7 @@ import numpy as np
 from bokeh.io import curdoc
 from bokeh.layouts import row, column, gridplot, layout
 from bokeh.palettes import Spectral6
-from bokeh.models import ColumnDataSource, Range1d, LinearAxis
+from bokeh.models import ColumnDataSource, Range1d, LinearAxis, NumeralTickFormatter
 from bokeh.models.widgets import Select, Button
 from bokeh.plotting import figure, output_file, show
 
@@ -76,6 +76,7 @@ cols, data = get_open_interest(df, 'NIFTY')
 data['date'] = data.timestamp.dt.date.astype(str)
 colors = Spectral6[:len(cols)]
 source.data = source.from_df(data)
+p.yaxis[0].formatter = NumeralTickFormatter(format='0.00 a')
 p.vbar_stack(cols, width=0.6, x='index', color=colors, source=source)
 
 price_data = get_price_oi(df, 'NIFTY')
@@ -90,6 +91,7 @@ p2.line('timestamp', 'close', source=prices)
 p2.extra_y_ranges = {'foo': Range1d(l1,h1)}
 p2.line('timestamp', 'open_int', source=prices, y_range_name='foo')
 p2.add_layout(LinearAxis(y_range_name='foo'), 'right')
+p2.yaxis[1].formatter = NumeralTickFormatter(format='0.0 a')
 
 pct_change = data[['date', 'combined_oi']].copy()
 pct_change['date'] = pd.to_datetime(pct_change['date'])
