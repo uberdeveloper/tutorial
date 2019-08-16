@@ -85,8 +85,13 @@ h0 = price_data['close'].max()
 l0 = price_data['close'].min()
 h1 = price_data['open_int'].max()
 l1 = price_data['open_int'].min()
+
 p2 = figure(title='Price vs Open Interest', 
     x_axis_type='datetime', y_range=(l0,h0),
+    tooltips = [
+        ('date', '@timestamp{%F}'),
+        ('value', '$y{0.00 a}')
+    ],
     background_fill_color='beige', background_fill_alpha=0.4)
 p2.line('timestamp', 'close', line_width=2, source=prices)
 p2.extra_y_ranges = {'foo': Range1d(l1,h1)}
@@ -94,12 +99,16 @@ p2.line('timestamp', 'open_int', source=prices, y_range_name='foo',
     line_color='firebrick', line_width=2)
 p2.add_layout(LinearAxis(y_range_name='foo'), 'right')
 p2.yaxis[1].formatter = NumeralTickFormatter(format='0.0 a')
+p2.hover.formatters = {'timestamp': 'datetime'}
 
 pct_change = data[['date', 'combined_oi']].copy()
 pct_change['date'] = pd.to_datetime(pct_change['date'])
 pct_change['chg'] = pct_change.combined_oi.pct_change()
 pct_chg.data = pct_chg.from_df(pct_change)
 p3 = figure(title='Change in open_interest',
+    tooltips=[
+        ('change', '$y{0.00%}')
+    ],
     background_fill_color='beige', background_fill_alpha=0.4)
 p3.vbar(x='index', top='chg', width=0.6, 
     fill_alpha=0.7, color='gold', source=pct_chg)
