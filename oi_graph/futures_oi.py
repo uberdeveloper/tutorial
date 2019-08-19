@@ -67,17 +67,18 @@ button = Button(label='Refresh', button_type="success")
 
 # Create plots
 p = figure(title='Open interest chart for NIFTY futures',
+    x_axis_type='datetime',
     tooltips=[
         ('date', '@date'),
         ('combined OI', '@combined_oi{0 a}'),
         ('expiry_at', '$name q:@$name{0.0 a}')
     ],background_fill_color='beige', background_fill_alpha=0.4)
 cols, data = get_open_interest(df, 'NIFTY')
-data['date'] = data.timestamp.dt.date.astype(str)
+data['date'] = data.timestamp.dt.date
 colors = Dark2[6][:len(cols)]
 source.data = source.from_df(data)
 p.yaxis[0].formatter = NumeralTickFormatter(format='0.00 a')
-p.vbar_stack(cols, width=0.6, x='index', color=colors, source=source, fill_alpha=0.7)
+p.vbar_stack(cols, width=3.6e7, x='date', color=colors, source=source, fill_alpha=0.7)
 
 price_data = get_price_oi(df, 'NIFTY')
 prices.data = prices.from_df(price_data)
@@ -106,11 +107,12 @@ pct_change['date'] = pd.to_datetime(pct_change['date'])
 pct_change['chg'] = pct_change.combined_oi.pct_change()
 pct_chg.data = pct_chg.from_df(pct_change)
 p3 = figure(title='Change in open_interest',
+    x_axis_type='datetime',
     tooltips=[
         ('change', '$y{0.00%}')
-    ], x_range = p.x_range,
+    ],
     background_fill_color='beige', background_fill_alpha=0.4)
-p3.vbar(x='index', top='chg', width=0.6, 
+p3.vbar(x='date', top='chg', width=3.6e7, 
     fill_alpha=0.7, color='gold', source=pct_chg)
 
 
